@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Forum</title>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        
+        body {
+
+            background-color: #25D366;
+        }
+
+        .container {
+
+            margin: auto; 
+            margin-top: 15%;
+            background-color: #DCF8C6;
+            border-radius: 5px;
+            width: 25%;
+            padding: 5%;
+            padding-top: 1%;
+            padding-bottom: 3%;
+        }
+
+        p {
+
+            text-align: center;
+            font-size: 5vh;
+        }
+
+        #name {
+
+            width: 90%;
+            border: 2px solid #000;
+            border-radius: 5px;
+            background-color: #ECE5DD;
+            padding: 2%;
+            margin: 2%;
+            margin-bottom: 5%;
+        }
+
+        #btn {
+  
+            border: 1.9px solid #000;
+            border-radius: 2px;
+            background-color: #ECE5DD;    
+            padding: 1%;
+            margin-top: 2%; 
+            margin-left: 40%;
+        }
+
+        #message-container {
+            
+            background-color: #ECE5DD;
+            border-radius: 5px;
+            margin: 1%;
+            width: auto;
+            padding: 1%;
+            line-height: 30px;
+        }
+
+        #btn-sendmsg {
+
+            position: fixed;
+            bottom: 2%;
+            right: 0.7%;
+            width: 10%;
+            padding: 1%;
+            border-radius: 5px;
+            border: none;
+            border: 1px solid #000;
+        }
+
+        #message {
+
+            position: fixed;
+            bottom: 2%;
+            width: 85%;
+            padding: 1%;
+            margin-left: 1%;
+            border-radius: 5px;
+            border: none;
+            border: 1px solid #000;
+        }
+
+    </style>
+
+</head>
+<body>
+    
+    <script>
+
+        var socket = io();
+        var user;
+
+        function setUsername(){
+
+            socket.emit('setUsername', document.getElementById('name').value);
+        }
+
+        socket.on('userExists', function(data){
+
+            document.getElementById('error-container').innerHTML = data;
+        });
+
+        socket.on('userSet', function(data){
+
+            user = data.username;
+            document.body.innerHTML = ' <div id="message-container"></div>\
+                                        <input type="text" id="message">\
+                                        <button type="button" name="button" id="btn-sendmsg" onclick="sendMessage()">Send</button>';
+        });
+
+        function sendMessage(){
+
+            var msg = document.getElementById('message').value;
+            if(msg){
+                socket.emit('msg', {message : msg, user : user});
+            }
+        }
+
+        socket.on('newmsg', function(data){
+
+            if(user){
+                document.getElementById('message-container').innerHTML +=  '<div><b>' + data.user + '</b> : ' + data.message + '</div>';
+            }
+        })
+
+    </script>
+
+    <div id="error-container"></div>
+    <div class="container">
+        <p>Let's get started!</p>
+        <input type="text" name="name" id="name" placeholder="Username">
+        <input type="button" name="button" id ="btn" value="Send" onclick="setUsername()">
+    </div>
+
+</body>
+</html>

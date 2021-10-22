@@ -1,9 +1,14 @@
 var express = require('express');
 var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
-var LoginCredentials = require('./Login.Model');
-var DB = 'mongodb://localhost/mental-health-forum'
+var bcrypt = require('bcrypt');
+var LoginCredentials = require('./User.Model');
+var DB = 'mongodb://localhost/mental-health-forum';
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var PORT = 8000;
 
 mongoose.connect(DB);
@@ -14,28 +19,81 @@ app.use(bodyParser.urlencoded({
     extended : true
 }));
 
-app.get('/signup', function(req, res){
-    LoginCredentials.find(function(err, response){
-        res.json(response);
+app.use(cookieParser());
+
+app.use(session({secret: "Shh, its a secret!"}));
+
+// Sessions example
+app.get('/', function(req, res){
+    
+    if(req.session.page_views){
+       req.session.page_views++;
+       res.send("You visited this page " + req.session.page_views + " times");
+    } else {
+       req.session.page_views = 1;
+       res.send("Welcome to this page for the first time!");
+    }
+ }); 
+
+// Rendering Index.html
+app.get('/chat', function(req, res){
+    res.sendFile(__dirname + '/' + 'index.html');
+});
+
+// User Array
+users = [];
+
+// Socket Connection
+io.on('connection', function(socket){
+
+    console.log('User Connected');
+    socket.on('setUsername', function(data){
+        if(users.indexOf(data) > -1){
+            socket.emit('userExists', data + ' username taken!');
+        } else {
+            users.push(data);
+            socket.emit('userSet', {username : data});
+        }
+    });
+
+    socket.on('msg', function(data){
+        io.sockets.emit('newmsg', data);
     });
 });
 
+// Login Route
 app.post('/login', function(req, res){
 
     username = req.body.username;
     password = req.body.password;
 
-    // Finding username and password that matches with the input username and password
-    LoginCredentials.find({username: username, password: password}, function(err, response){
-        if(response[0] == undefined){
-            res.send('Wrong username or password. Try again!')
-        } else {
-            res.send('Login successful!')
-            console.log('Login \nUsername :',response[0].username, '\nPassword :', response[0].password);
-        } 
+    LoginCredentials.find({username: username}, function(err, result){
+        correctPassword = (result[0].password);
+
+        (async () => {
+
+            const hash = correctPassword;
+
+            // Function call
+            const isValidPass = await comparePassword(password, correctPassword);
+            
+            res.send(`Login ${!isValidPass ? 'un' : ''}successful!`);
+        })();
     });
+
+    // Function to compare passwords
+    const comparePassword = async (password, hash) => {
+        try {
+            return await bcrypt.compare(password, hash);
+        } catch (error) {
+            console.log(error);
+        }
+
+        return false;
+    }   
 });
 
+// Signup Route
 app.post('/signup', function(req, res){
 
     username = req.body.username;
@@ -46,24 +104,42 @@ app.post('/signup', function(req, res){
         if(response != null){
             res.send('Username exists!')
         } else { 
-            var newUser = new LoginCredentials();
-            newUser.username = username;
-            newUser.password = password;
-    
-            // Inserting user data if the user does not already exist 
-            newUser.save(function(err, result){
-                if(err){
-                    res.send('Signup Error!');
-                } else {
-                    res.send('Signup successful!');
-                    console.log('Signin \nUsername :', result.username, '\nPassword :', result.password);
+
+            // Function to hash password
+            const Hash = async (word, saltRounds = 10) => {
+
+                try {
+                    const salt = await bcrypt.genSalt(saltRounds);
+                    return await bcrypt.hash(word, salt);
+                } catch (err) {
+                    console.log(err);
                 }
-            });
+            
+                return null;
+            };
+
+            (async() => {
+
+                const hash = await Hash(password);
+
+                var newUser = new LoginCredentials();
+                
+                newUser.username = username;
+                newUser.password = hash;
+                
+                newUser.save(function(err, result){
+                    if(err) {
+                        res.send('Signup Error!');
+                    } else {
+                        res.send('Signup Successful!');
+                    }
+                });                
+            })();
         }
     });
 });
 
-app.listen(PORT, function(){
+http.listen(PORT, function(){
     console.log('App running on PORT', PORT);
 });
 
