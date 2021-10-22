@@ -1,3 +1,4 @@
+// Require
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -5,11 +6,19 @@ var io = require('socket.io')(http);
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
-var LoginCredentials = require('./User.Model');
-var DB = 'mongodb://localhost/mental-health-forum';
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
+var DB = 'mongodb://localhost/mental-health-forum';
+
+// Schema Models
+var LoginCredentials = require('./User.Model');
+var Blog = require('./Blog.Model');
+
+// Variables
 var PORT = 8000;
+
+// User Array
+users = [];
 
 mongoose.connect(DB);
 
@@ -22,26 +31,6 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 
 app.use(session({secret: "Shh, its a secret!"}));
-
-// Sessions example
-app.get('/', function(req, res){
-    
-    if(req.session.page_views){
-       req.session.page_views++;
-       res.send("You visited this page " + req.session.page_views + " times");
-    } else {
-       req.session.page_views = 1;
-       res.send("Welcome to this page for the first time!");
-    }
- }); 
-
-// Rendering Index.html
-app.get('/chat', function(req, res){
-    res.sendFile(__dirname + '/' + 'index.html');
-});
-
-// User Array
-users = [];
 
 // Socket Connection
 io.on('connection', function(socket){
@@ -60,6 +49,64 @@ io.on('connection', function(socket){
         io.sockets.emit('newmsg', data);
     });
 });
+
+// -- ROUTING -- 
+
+// Sessions example
+app.get('/', function(req, res){
+    
+    if(req.session.page_views){
+       req.session.page_views++;
+       res.send("You visited this page " + req.session.page_views + " times");
+    } else {
+       req.session.page_views = 1;
+       res.send("Welcome to this page for the first time!");
+    }
+ }); 
+
+// Chat Application
+app.get('/chat', function(req, res){
+    res.sendFile(__dirname + '/' + 'index.html');
+});
+
+// Blog
+app.get('/add-blog', function(req, res){
+
+    res.sendFile(__dirname + '/' + 'blog.html');
+});
+
+app.post('/add-blog', function(req, res){
+
+    var newBlog = new Blog();
+
+    newBlog.blog = req.body.blog;
+    newBlog.author = req.body.author;
+    newBlog.topic = req.body.topic;
+
+    newBlog.save(function(err, result){
+        if(err) {
+            res.send('Saving Error!');
+        } else {
+            res.send('Blog Saved!');
+        }
+    });
+
+    res.send(newBlog.author);
+
+});
+
+// Display Blogs
+app.get('/blog/:title', function(req, res){
+
+    // res.send(req.params.topic);
+    Blog.find({topic: req.params.title}, function(err, result){
+        if(err){
+            console.log(err);
+        } else {
+            res.send(result);
+        }
+    });
+})
 
 // Login Route
 app.post('/login', function(req, res){
