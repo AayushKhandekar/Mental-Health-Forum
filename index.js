@@ -32,6 +32,10 @@ app.use(cookieParser());
 
 app.use(session({secret: "Shh, its a secret!"}));
 
+app.use(express.static('public'));
+
+app.set('view-engine', 'ejs');
+
 // Socket Connection
 io.on('connection', function(socket){
 
@@ -66,13 +70,13 @@ app.get('/', function(req, res){
 
 // Chat Application
 app.get('/chat', function(req, res){
-    res.sendFile(__dirname + '/' + 'index.html');
+    res.render('chat.ejs')
 });
 
 // Blog
 app.get('/add-blog', function(req, res){
 
-    res.sendFile(__dirname + '/' + 'blog.html');
+    res.render('add-blog.ejs');
 });
 
 app.post('/add-blog', function(req, res){
@@ -93,6 +97,11 @@ app.post('/add-blog', function(req, res){
 
     res.send(newBlog.author);
 
+});
+
+app.get('/blog', function(req, res){
+
+    res.render('blog.ejs');
 });
 
 // Display Blogs
