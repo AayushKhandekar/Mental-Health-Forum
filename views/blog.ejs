@@ -17,10 +17,11 @@
     
     <div class="container">
         <div class="blog-container">
-            <h1>Mental Health Forum</h1>
-            <h3>Aayush Khandekar</h3><br>
+            <h1><%- title %></h1>
+            <h3><%- author %></h3>
+            <h5>Keyword : <%- keyword %></h5><br>   
             <hr>
-            <p>Cohort Intelligence ( CI ) is an optimization technique. It attempts to model the behavior often observed in a self-organizing system in which candidates in a cohort interact and compete with one another in order to achieve shared goals. Each candidate tries to improve its own behavior by observing the behavior of every other candidate in that cohort. Each candidate in the cohort follows a certain behavior which may result in the improvement of its own behavior. When a candidate attempts to follow a given behavior characterized by certain qualities, it often adopts such qualities in a manner that may improve its own goal. In this way, candidates in the cohort learn from one another which, in time, helps improve the behavior of the entire group. The cohort’s behavior as a whole is said to have reached saturation (convergence) if, over a considerable number of learning attempts, the individual behavior of all candidates does not improve considerably making it difficult to distinguish between them. In other words, the difference between the individual behaviors of the candidates becomes insignificant.</p>
+            <p><%- content %></p>
         </div>
         
         <div class="recommendations">
@@ -28,7 +29,7 @@
                 <div class="col-sm-6">
                   <div class="card">
                     <div class="card-body">
-                      <h5 class="card-title">Special title treatment</h5>
+                      <h5 class="card-title"><%- suggestiontitle1 %></h5>
                       <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
                       <a href="#" class="btn btn-primary">Go somewhere</a>
                     </div>

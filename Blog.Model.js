@@ -5,7 +5,7 @@ var BlogSchema = new Schema({
 
     author : String,
     blog : String,
-    topic : String,
+    keyword : String,
     title: String
 });
 

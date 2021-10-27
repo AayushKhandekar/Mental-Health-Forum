@@ -27,6 +27,11 @@ body {
     text-align: center;
 }
 
+.blog-container h5 {
+
+    text-align: center;
+}
+
 .blog-container p {
 
     margin: 2%;    

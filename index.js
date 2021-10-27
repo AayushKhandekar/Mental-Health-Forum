@@ -30,7 +30,7 @@ app.use(bodyParser.urlencoded({
 
 app.use(cookieParser());
 
-app.use(session({secret: "Shh, its a secret!"}));
+// app.use(session({secret: "Shh, its a secret!"}));
 
 app.use(express.static('public'));
 
@@ -57,16 +57,16 @@ io.on('connection', function(socket){
 // -- ROUTING -- 
 
 // Sessions example
-app.get('/', function(req, res){
+// app.get('/', function(req, res){
     
-    if(req.session.page_views){
-       req.session.page_views++;
-       res.send("You visited this page " + req.session.page_views + " times");
-    } else {
-       req.session.page_views = 1;
-       res.send("Welcome to this page for the first time!");
-    }
- }); 
+//     if(req.session.page_views){
+//        req.session.page_views++;
+//        res.send("You visited this page " + req.session.page_views + " times");
+//     } else {
+//        req.session.page_views = 1;
+//        res.send("Welcome to this page for the first time!");
+//     }
+//  }); 
 
 // Chat Application
 app.get('/chat', function(req, res){
@@ -85,7 +85,8 @@ app.post('/add-blog', function(req, res){
 
     newBlog.blog = req.body.blog;
     newBlog.author = req.body.author;
-    newBlog.topic = req.body.topic;
+    newBlog.title = req.body.title;
+    newBlog.keyword = req.body.keyword;
 
     newBlog.save(function(err, result){
         if(err) {
@@ -94,9 +95,6 @@ app.post('/add-blog', function(req, res){
             res.send('Blog Saved!');
         }
     });
-
-    res.send(newBlog.author);
-
 });
 
 app.get('/blog', function(req, res){
@@ -108,11 +106,19 @@ app.get('/blog', function(req, res){
 app.get('/blog/:title', function(req, res){
 
     // res.send(req.params.topic);
-    Blog.find({topic: req.params.title}, function(err, result){
+    Blog.find({title: req.params.title}, function(err, result){
         if(err){
             console.log(err);
         } else {
-            res.send(result);
+            Blog.find({keyword: result[0].keyword}, function(err, keywordResult){
+                console.log(keywordResult);
+                for(let idx = 0; idx < Object.keys(keywordResult).length; idx++){
+                    if(keywordResult[idx].title != result[0].title){
+                        // console.log(keywordResult[idx].title);
+                        res.render('blog.ejs', {title: result[0].title, author: result[0].author, content: result[0].blog, keyword: result[0].keyword, suggestiontitle1: keywordResult[idx].title, suggestion});
+                    }
+                }
+            });
         }
     });
 })
