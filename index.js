@@ -9,6 +9,7 @@ var bcrypt = require('bcrypt');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var DB = 'mongodb://localhost/mental-health-forum';
+var moment = require('compare-dates');
 
 // Schema Models
 var LoginCredentials = require('./User.Model');
@@ -71,8 +72,8 @@ io.on('connection', function(socket){
 //     }
 //  }); 
 
-// Events
 
+// Events
 app.get('/create-event', function(req, res){
     
     res.render('create-event.ejs');
@@ -99,8 +100,29 @@ app.post('/create-event', function(req, res){
 
 app.get('/events', function(req, res){
 
+    // Todays Date
+    var dateToday = new Date();
+    var day = dateToday.getDate();
+    var month = dateToday.getMonth() + 1; // Month starts from 0 here
+    var year = dateToday.getFullYear();
+    date = year + "-" + month + "-" + day;
+    var date = new Date(date); // Converting to date
+    dateTime = date.getTime(); // Calculating time since the beginning of time
+
+    // Array to store upcoming events
+    var arr = [];
+
+    // Displaying only upcoming events
     Event.find({}, function(err, result){
-        res.send(result);
+        for(let idx = 0; idx < result.length; idx++){
+            var otherDate = new Date(result[idx].date);
+            otherDateTime = (otherDate.getTime());
+            if(dateTime < otherDateTime){
+                arr.push(result[idx]);
+            }
+        }
+
+        res.send(arr);
     });
 });
 
