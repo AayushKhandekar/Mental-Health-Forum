@@ -13,6 +13,9 @@ var DB = 'mongodb://localhost/mental-health-forum';
 // Schema Models
 var LoginCredentials = require('./User.Model');
 var Blog = require('./Blog.Model');
+var Event = require('./Event.Model');
+const { time } = require('console');
+const { events } = require('./User.Model');
 
 // Variables
 var PORT = 8000;
@@ -67,6 +70,39 @@ io.on('connection', function(socket){
 //        res.send("Welcome to this page for the first time!");
 //     }
 //  }); 
+
+// Events
+
+app.get('/create-event', function(req, res){
+    
+    res.render('create-event.ejs');
+});
+
+app.post('/create-event', function(req, res){
+    
+    var newEvent = new Event();
+
+    newEvent.title = req.body.eventtitle;
+    newEvent.date = req.body.eventdate;
+    newEvent.startTime = req.body.eventstarttime;
+    newEvent.endTime = req.body.eventendtime;
+    newEvent.url = req.body.eventurl;
+
+    newEvent.save(function(err, result){
+        if(err){
+            res.send(err);
+        } else {
+            res.send("Event Created");
+        }
+    }); 
+});
+
+app.get('/events', function(req, res){
+
+    Event.find({}, function(err, result){
+        res.send(result);
+    });
+});
 
 // Chat Application
 app.get('/chat', function(req, res){
