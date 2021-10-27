@@ -115,7 +115,7 @@ app.get('/blog/:title', function(req, res){
                 for(let idx = 0; idx < Object.keys(keywordResult).length; idx++){
                     if(keywordResult[idx].title != result[0].title){
                         // console.log(keywordResult[idx].title);
-                        res.render('blog.ejs', {title: result[0].title, author: result[0].author, content: result[0].blog, keyword: result[0].keyword, suggestiontitle1: keywordResult[idx].title, suggestion});
+                        res.render('blog.ejs', {title: result[0].title, author: result[0].author, content: result[0].blog, keyword: result[0].keyword, suggestiontitle1: keywordResult[idx].title});
                     }
                 }
             });
