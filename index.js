@@ -12,11 +12,11 @@ var MongoDBSession = require('connect-mongodb-session')(session);
 var DB = 'mongodb://localhost/mental-health-forum';
 
 // Schema Models
-var LoginCredentials = require('./User.Model');
-var Blog = require('./Blog.Model');
-var Event = require('./Event.Model');
+var LoginCredentials = require('./models/User.Model');
+var Blog = require('./models/Blog.Model');
+var Event = require('./models/Event.Model');
 const { time } = require('console');
-const { events } = require('./User.Model');
+const { events } = require('./models/User.Model');
 
 // Variables
 var PORT = 8000;
@@ -184,28 +184,42 @@ app.get('/blog/:title', function(req, res){
     });
 })
 
+app.get('/dashboard', function(req, res){
+
+    res.render('dashboard.ejs');
+});
+
 // Login Route
+app.get('/login', function(req, res){
+
+    res.render('login.ejs');
+});
+
 app.post('/login', function(req, res){
 
     username = req.body.username;
     password = req.body.password;
 
-    LoginCredentials.find({username: username}, function(err, result){
-        correctPassword = (result[0].password);
+    LoginCredentials.findOne({username: username}, function(err, result){
+        
+        // User does not exist
+        if(result == null){
 
+            console.log('User does not exist');
+        }
+
+        // User exists
         (async () => {
 
+            correctPassword = result.password;
             const hash = correctPassword;
-
-            // Function call
             const isValidPass = await comparePassword(password, correctPassword);
-            
-            // if(isValidPass == false){
-            //     return res.redirect('/login');
-            // };
 
-            res.send(`Login ${!isValidPass ? 'un' : ''}successful!`);
-            // res.redirect("/dashboard");
+            if(!isValidPass){
+                return res.redirect('/login');
+            } else {
+                return res.redirect('/dashboard');
+            }        
         })();
     });
 
@@ -221,11 +235,17 @@ app.post('/login', function(req, res){
     }   
 });
 
+app.get('/signup', function(req, res){
+
+    res.render('signup.ejs');
+});
+
 // Signup Route
 app.post('/signup', function(req, res){
 
     username = req.body.username;
     password = req.body.password;
+    email = req.body.email;
 
     // Checking is username exists in the database
     LoginCredentials.findOne({username: username}, function(err, response){
@@ -254,13 +274,13 @@ app.post('/signup', function(req, res){
                 
                 newUser.username = username;
                 newUser.password = hash;
+                newUser.email = email;
                 
                 newUser.save(function(err, result){
                     if(err) {
                         res.send('Signup Error!');
                     } else {
-                        res.send('Signup Successful!');
-                        // res.redirect('/');
+                        res.redirect('/login');
                     }
                 });                
             })();
