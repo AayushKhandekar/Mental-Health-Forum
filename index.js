@@ -8,8 +8,8 @@ var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
+var MongoDBSession = require('connect-mongodb-session')(session);
 var DB = 'mongodb://localhost/mental-health-forum';
-var moment = require('compare-dates');
 
 // Schema Models
 var LoginCredentials = require('./User.Model');
@@ -20,6 +20,11 @@ const { events } = require('./User.Model');
 
 // Variables
 var PORT = 8000;
+
+var store = new MongoDBSession({
+    uri: DB,
+    collection: "session",
+});
 
 // User Array
 users = [];
@@ -34,7 +39,12 @@ app.use(bodyParser.urlencoded({
 
 app.use(cookieParser());
 
-// app.use(session({secret: "Shh, its a secret!"}));
+app.use(session({
+    secret: "Mental-Health-Forum",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+}));
 
 app.use(express.static('public'));
 
@@ -60,18 +70,11 @@ io.on('connection', function(socket){
 
 // -- ROUTING -- 
 
-// Sessions example
-// app.get('/', function(req, res){
-    
-//     if(req.session.page_views){
-//        req.session.page_views++;
-//        res.send("You visited this page " + req.session.page_views + " times");
-//     } else {
-//        req.session.page_views = 1;
-//        res.send("Welcome to this page for the first time!");
-//     }
-//  }); 
+app.get('/', function(req, res){
 
+    req.session.isAuth = true;
+    res.send("Hello User");
+});
 
 // Events
 app.get('/create-event', function(req, res){
@@ -197,7 +200,12 @@ app.post('/login', function(req, res){
             // Function call
             const isValidPass = await comparePassword(password, correctPassword);
             
+            // if(isValidPass == false){
+            //     return res.redirect('/login');
+            // };
+
             res.send(`Login ${!isValidPass ? 'un' : ''}successful!`);
+            // res.redirect("/dashboard");
         })();
     });
 
@@ -252,6 +260,7 @@ app.post('/signup', function(req, res){
                         res.send('Signup Error!');
                     } else {
                         res.send('Signup Successful!');
+                        // res.redirect('/');
                     }
                 });                
             })();
